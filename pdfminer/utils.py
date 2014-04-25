@@ -3,8 +3,14 @@
 Miscellaneous Routines.
 """
 import struct
-from sys import maxint as INF
+import six
+from six import MAXSIZE as INF
 
+if six.PY2:
+    import __builtin__
+    long = __builtin__.long
+else:
+    long = int
 
 ##  PNG Predictor
 ##
@@ -54,25 +60,33 @@ def apply_png_predictor(pred, colors, columns, bitspercomponent, data):
 MATRIX_IDENTITY = (1, 0, 0, 1, 0, 0)
 
 
-def mult_matrix((a1, b1, c1, d1, e1, f1), (a0, b0, c0, d0, e0, f0)):
+def mult_matrix(a1_b1_c1_d1_e1_f1, a0_b0_c0_d0_e0_f0):
     """Returns the multiplication of two matrices."""
+    a1, b1, c1, d1, e1, f1 = a1_b1_c1_d1_e1_f1
+    a0, b0, c0, d0, e0, f0 = a0_b0_c0_d0_e0_f0
     return (a0*a1+c0*b1,    b0*a1+d0*b1,
             a0*c1+c0*d1,    b0*c1+d0*d1,
             a0*e1+c0*f1+e0, b0*e1+d0*f1+f0)
 
 
-def translate_matrix((a, b, c, d, e, f), (x, y)):
+def translate_matrix(a_b_c_d_e_f, x_y):
     """Translates a matrix by (x, y)."""
+    a, b, c, d, e, f = a_b_c_d_e_f
+    x, y = x_y
     return (a, b, c, d, x*a+y*c+e, x*b+y*d+f)
 
 
-def apply_matrix_pt((a, b, c, d, e, f), (x, y)):
+def apply_matrix_pt(a_b_c_d_e_f, x_y):
     """Applies a matrix to a point."""
+    a, b, c, d, e, f = a_b_c_d_e_f
+    x, y = x_y
     return (a*x+c*y+e, b*x+d*y+f)
 
 
-def apply_matrix_norm((a, b, c, d, e, f), (p, q)):
+def apply_matrix_norm(a_b_c_d_e_f, p_q):
     """Equivalent to apply_matrix_pt(M, (p,q)) - apply_matrix_pt(M, (0,0))"""
+    a, b, c, d, e, f = a_b_c_d_e_f
+    p, q = p_q
     return (a*p+c*q, b*p+d*q)
 
 
@@ -176,7 +190,7 @@ def nunpack(s, default=0):
 
 
 # decode_text
-PDFDocEncoding = ''.join(unichr(x) for x in (
+PDFDocEncoding = ''.join(six.unichr(x) for x in (
     0x0000, 0x0001, 0x0002, 0x0003, 0x0004, 0x0005, 0x0006, 0x0007,
     0x0008, 0x0009, 0x000a, 0x000b, 0x000c, 0x000d, 0x000e, 0x000f,
     0x0010, 0x0011, 0x0012, 0x0013, 0x0014, 0x0015, 0x0017, 0x0017,
@@ -227,11 +241,13 @@ def enc(x, codec='ascii'):
     return x.encode(codec, 'xmlcharrefreplace')
 
 
-def bbox2str((x0, y0, x1, y1)):
+def bbox2str(x0_y0_x1_y1):
+    x0, y0, x1, y1 = x0_y0_x1_y1
     return '%.3f,%.3f,%.3f,%.3f' % (x0, y0, x1, y1)
 
 
-def matrix2str((a, b, c, d, e, f)):
+def matrix2str(a, b, c, d, e, f):
+    a, b, c, d, e, f = a_b_c_d_e_f
     return '[%.2f,%.2f,%.2f,%.2f, (%.2f,%.2f)]' % (a, b, c, d, e, f)
 
 
@@ -263,7 +279,9 @@ class Plane(object):
     def __contains__(self, obj):
         return obj in self._objs
 
-    def _getrange(self, (x0, y0, x1, y1)):
+    def _getrange(self, x0_y0_x1_y1):
+        x0, y0, x1, y1 = x0_y0_x1_y1
+        
         if (x1 <= self.x0 or self.x1 <= x0 or
             y1 <= self.y0 or self.y1 <= y0): return
         x0 = max(self.x0, x0)
@@ -304,7 +322,9 @@ class Plane(object):
         return
 
     # find(): finds objects that are in a certain area.
-    def find(self, (x0, y0, x1, y1)):
+    def find(self, x0_y0_x1_y1):
+        x0, y0, x1, y1 = x0_y0_x1_y1
+        
         done = set()
         for k in self._getrange((x0, y0, x1, y1)):
             if k not in self._grid:

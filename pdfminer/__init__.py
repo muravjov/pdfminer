@@ -2,4 +2,5 @@
 __version__ = '20140328'
 
 if __name__ == '__main__':
-    print __version__
+    import six
+    six.print_(__version__)
